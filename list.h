@@ -17,9 +17,34 @@ public:
     T& operator[](size_t index);
 
     void print() const;
-    void push_tail(T el);
+    void push_tail(T el) {
+        if (head_ == nullptr) {
+            head_ = new Node(head_, el);
+            count_++;
+        }
+        else {
+            Node* current = head_;
+
+            while (current->next != head_) {
+                current = current->next;
+            }
+
+            current->next = new Node(head_, el);
+            count_++;
+        }
+    }
     void push_tail(const LinkedList<T>& other);
-    void push_head(T el);
+    void push_head(T el) {
+        if (head_ == nullptr) {
+            head_ = new Node(head_, el);
+            count_++;
+        }
+        else {
+            Node* current = new Node(head_, el);
+            head_ = current;
+            count_++;
+        }
+    }
     void push_head(const LinkedList<T>& other);
     void pop_head();
     void pop_tail();
@@ -34,9 +59,9 @@ private:
             this->next = next;
             this->data = data;
         }
-    } *_tail = nullptr;
+    } *head_ = nullptr;
 
-    size_t _count;
+    size_t count_;
 };
 
 template <typename T>
