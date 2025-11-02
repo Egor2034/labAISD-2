@@ -2,6 +2,7 @@
 #define LINKED_LIST
 
 #include <iostream>
+#include <stdexcept>
 
 template <typename T>
 class LinkedList {
@@ -26,8 +27,30 @@ public:
     }
 
     LinkedList<T>& operator=(const LinkedList<T>& other);
-    const T& operator[](size_t index) const;
-    T& operator[](size_t index);
+
+    const T& operator[](size_t index) const {
+        if (index >= count() || index < 0) { throw std::out_of_range("Out of range!"); }
+
+        Node* current = head_;
+
+        for (size_t i = 0; i != index; i++) {
+            current = current->next;
+        }
+
+        return current->data;
+    }
+
+    T& operator[](size_t index) {
+        if (index >= count() || index < 0) { throw std::out_of_range("Out of range!"); }
+
+        Node* current = head_;
+
+        for (size_t i = 0; i != index; i++) {
+            current = current->next;
+        }
+
+        return current->data;
+    }
 
     void print() const {
         if (head_ == nullptr) {
@@ -60,7 +83,6 @@ public:
             tail->next = new Node(head_, el);
         }
     }
-    
     void push_tail(const LinkedList<T>& other);
 
     void push_head(T el) {
@@ -97,6 +119,20 @@ public:
         } while (current != head_);
 
         return false;
+    }
+
+    size_t count() const {
+        if (head_ == nullptr) { return 0; }
+
+        Node* current = head_;
+        size_t size = 0;
+
+        do {
+            size++;
+            current = current->next;
+        } while (current != head_);
+        
+        return size;
     }
 private:
     struct Node {
