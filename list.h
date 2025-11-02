@@ -6,62 +6,107 @@
 template <typename T>
 class LinkedList {
 public:
-    LinkedList();
-    LinkedList(size_T count, T min, T max) requires std::integral<Type>;
-    LinkedList(size_t count, T min, T max) requires std::floating_point<Type>;
+    LinkedList() : head_(nullptr) {}
+    LinkedList(size_t count, T min, T max) requires std::integral<T>;
+    LinkedList(size_t count, T min, T max) requires std::floating_point<T>;
     LinkedList(const LinkedList<T>& other);
-    ~LinkedList();
+
+    ~LinkedList() {
+        if (head_) {
+            Node* current = head_->next;
+
+            while (current != head_) {
+                Node* to_delete = current;
+                current = current->next;
+                delete to_delete;
+            }
+
+            delete head_;
+        }
+    }
 
     LinkedList<T>& operator=(const LinkedList<T>& other);
     const T& operator[](size_t index) const;
     T& operator[](size_t index);
 
-    void print() const;
+    void print() const {
+        if (head_ == nullptr) {
+            std::cout << "";
+            return;
+        }
+
+        Node* current = head_;
+
+        do {
+            std::cout << current->data << " ";
+            current = current->next;
+        } while (current != head_);
+
+        std::cout << "\n";
+    }
+
     void push_tail(T el) {
         if (head_ == nullptr) {
-            head_ = new Node(head_, el);
-            count_++;
+            head_ = new Node(nullptr, el);
+            head_->next = head_;
         }
         else {
-            Node* current = head_;
+            Node* tail = head_;
 
-            while (current->next != head_) {
-                current = current->next;
+            while (tail->next != head_) {
+                tail = tail->next;
             }
 
-            current->next = new Node(head_, el);
-            count_++;
+            tail->next = new Node(head_, el);
         }
     }
+    
     void push_tail(const LinkedList<T>& other);
+
     void push_head(T el) {
         if (head_ == nullptr) {
-            head_ = new Node(head_, el);
-            count_++;
+            head_ = new Node(nullptr, el);
+            head_->next = head_;
         }
         else {
-            Node* current = new Node(head_, el);
-            head_ = current;
-            count_++;
+            Node* new_node = new Node(head_, el);
+            Node* last = head_;
+
+            while (last->next != head_) {
+                last = last->next;
+            }
+
+            last->next = new_node;
+            head_ = new_node;
         }
     }
+
     void push_head(const LinkedList<T>& other);
     void pop_head();
     void pop_tail();
     void delete_node(T el);
-    bool contains() const;
-    size_t get_count() const;
+
+    bool contains(T el) const {
+        if (head_ == nullptr) { return false; }
+
+        Node* current = head_;
+
+        do {
+            if (current->data == el) { return true; }
+            current = current->next;
+        } while (current != head_);
+
+        return false;
+    }
 private:
     struct Node {
         Node* next;
         T data;
-        Node(Node* next = nullptr, T data = Type()) {
+        Node(Node* next = nullptr, T data = T()) {
             this->next = next;
             this->data = data;
         }
     } *head_ = nullptr;
-
-    size_t count_;
 };
 
 template <typename T>
@@ -75,4 +120,4 @@ bool is_prime(T number) requires std::integral<T> {
     return true;
 }
 
-#endif
+#endif  
