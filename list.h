@@ -29,7 +29,7 @@ public:
     LinkedList<T>& operator=(const LinkedList<T>& other);
 
     const T& operator[](size_t index) const {
-        if (index >= count() || index < 0) { throw std::out_of_range("Out of range!"); }
+        if (index >= count()) { throw std::out_of_range("Out of range!"); }
 
         Node* current = head_;
 
@@ -41,7 +41,7 @@ public:
     }
 
     T& operator[](size_t index) {
-        if (index >= count() || index < 0) { throw std::out_of_range("Out of range!"); }
+        if (index >= count()) { throw std::out_of_range("Out of range!"); }
 
         Node* current = head_;
 
