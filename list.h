@@ -7,29 +7,25 @@
 template <typename T>
 class LinkedList {
 public:
-    LinkedList() : head_(nullptr) {}
+    LinkedList() : head_(nullptr), count_(0) {}
     LinkedList(size_t count, T min, T max) requires std::integral<T>;
     LinkedList(size_t count, T min, T max) requires std::floating_point<T>;
-    LinkedList(const LinkedList<T>& other);
 
-    ~LinkedList() {
-        if (head_) {
-            Node* current = head_->next;
+    LinkedList(const LinkedList<T>& other) { copy(other); }
 
-            while (current != head_) {
-                Node* to_delete = current;
-                current = current->next;
-                delete to_delete;
-            }
+    ~LinkedList() { clear(); }
 
-            delete head_;
+    LinkedList<T>& operator=(const LinkedList<T>& other) {
+        if (this != &other) {
+            clear();
+            copy(other);
         }
+
+        return *this;
     }
 
-    LinkedList<T>& operator=(const LinkedList<T>& other);
-
     const T& operator[](size_t index) const {
-        if (index >= count()) { throw std::out_of_range("Out of range!"); }
+        if (index >= count_ || index < 0) { throw std::out_of_range("Out of range!"); }
 
         Node* current = head_;
 
@@ -41,7 +37,7 @@ public:
     }
 
     T& operator[](size_t index) {
-        if (index >= count()) { throw std::out_of_range("Out of range!"); }
+        if (index >= count_ || index < 0) { throw std::out_of_range("Out of range!"); }
 
         Node* current = head_;
 
@@ -72,6 +68,7 @@ public:
         if (head_ == nullptr) {
             head_ = new Node(nullptr, el);
             head_->next = head_;
+            count_++;
         }
         else {
             Node* tail = head_;
@@ -81,14 +78,17 @@ public:
             }
 
             tail->next = new Node(head_, el);
+            count_++;
         }
     }
+
     void push_tail(const LinkedList<T>& other);
 
     void push_head(T el) {
         if (head_ == nullptr) {
             head_ = new Node(nullptr, el);
             head_->next = head_;
+            count_++;
         }
         else {
             Node* new_node = new Node(head_, el);
@@ -100,13 +100,73 @@ public:
 
             last->next = new_node;
             head_ = new_node;
+            count_++;
         }
     }
 
     void push_head(const LinkedList<T>& other);
-    void pop_head();
-    void pop_tail();
-    void delete_node(T el);
+
+    void pop_head() {
+        if (!head_) { return; }
+
+        if (count_ == 1) {
+            delete head_;
+            head_ = nullptr;
+            count_ = 0;
+            return;
+        }
+
+        Node* last = head_;
+
+        while (last->next != head_) {
+            last = last->next;
+        }
+
+        Node* after_head = head_->next;
+        delete head_;
+        count_--;
+        head_ = after_head;
+        last->next = head_;
+    }
+
+    void pop_tail() {
+        if (!head_) { return; }
+
+        if (count_ == 1) {
+            pop_head();
+        }
+
+        Node* current = head_;
+
+        while (current->next->next != head_) {
+            current = current->next;
+        }
+
+        Node* to_delete = current->next;
+        current->next = head_;
+        delete to_delete;
+        count_--;
+    }
+
+    //TODO у меня есть метод contains
+    void delete_node(T el) {
+        if (head_) {
+            Node* current = head_;
+
+            do {
+                if (current->next->data == el) {
+                    Node* to_delete = current->next;
+                    current->next = current->next->next;
+                    current = current->next;
+                    delete to_delete;
+                    count_--;
+                }
+                else {
+                    current = current->next;
+                }
+            } while (current != head_);
+        }
+    }
 
     bool contains(T el) const {
         if (head_ == nullptr) { return false; }
@@ -121,20 +181,35 @@ public:
         return false;
     }
 
-    size_t count() const {
-        if (head_ == nullptr) { return 0; }
-
-        Node* current = head_;
-        size_t size = 0;
-
-        do {
-            size++;
-            current = current->next;
-        } while (current != head_);
-        
-        return size;
-    }
+    size_t count() const { return count_; }
 private:
+    void clear() {
+        if (head_) {
+            Node* current = head_->next;
+
+            while (current != head_) {
+                Node* to_delete = current;
+                current = current->next;
+                delete to_delete;
+            }
+
+            delete head_;
+            head_ = nullptr;
+            count_ = 0;
+        }
+    }
+
+    void copy(const LinkedList<T>& other) {
+        Node* current = other.head_;
+
+        if (current) {
+            do {
+                push_tail(current->data);
+                current = current->next;
+            } while (current != other.head_);
+        }
+    }
+
     struct Node {
         Node* next;
         T data;
@@ -143,6 +218,8 @@ private:
             this->data = data;
         }
     } *head_ = nullptr;
+
+    size_t count_ = 0;
 };
 
 template <typename T>
