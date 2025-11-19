@@ -120,7 +120,10 @@ public:
 
     void push_tail(const LinkedList<T>& other) {
         if (other.head_ == nullptr) { return; }
-        if (head_ == nullptr) { copy(other); }
+        if (head_ == nullptr) { 
+            copy(other);
+            return;
+        }
 
         Node* current = head_;
 
@@ -155,7 +158,10 @@ public:
 
     void push_head(const LinkedList<T>& other) {
         if (other.head_ == nullptr) { return; }
-        if (head_ == nullptr) { copy(other); }
+        if (head_ == nullptr) { 
+            copy(other); 
+            return; 
+        }
 
         LinkedList<T> temp(*this);
         clear();
@@ -195,6 +201,7 @@ public:
 
         if (count_ == 1) {
             pop_head();
+            return;
         }
 
         Node* current = head_;
@@ -238,6 +245,22 @@ public:
     }
 
     size_t count() const { return count_; }
+
+    T max() const {
+        if (head_ == nullptr) {
+            throw std::exception("List is empty!");
+        }
+
+        Node* current = head_;
+        T max = current->data;
+
+        do {
+            max = (current->data > max) ? current->data : max;
+            current = current->next;
+        } while (current != head_);
+
+        return max;
+    }
 private:
     void clear() {
         if (head_) {
@@ -287,6 +310,15 @@ bool is_prime(T number) requires std::integral<T> {
     }
 
     return true;
+}
+
+template <typename T>
+LinkedList<T> eratosthenes(T n) requires std::integral<T> {
+    if (n < 2) { return LinkedList<T>(); }
+
+    LinkedList<T> temp;
+
+    for (T i = list; i < )
 }
 
 #endif  
