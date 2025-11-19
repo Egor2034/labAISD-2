@@ -1,15 +1,51 @@
 #ifndef LINKED_LIST
 #define LINKED_LIST
 
+#include <algorithm>
 #include <iostream>
 #include <stdexcept>
+#include <random>
 
 template <typename T>
 class LinkedList {
 public:
     LinkedList() : head_(nullptr), count_(0) {}
-    LinkedList(size_t count, T min, T max) requires std::integral<T>;
-    LinkedList(size_t count, T min, T max) requires std::floating_point<T>;
+
+    LinkedList(size_t count, T min, T max) requires std::integral<T> {
+        if (min > max) std::swap(min, max);
+
+        if (count == 0) {
+            count_ = 0;
+            head_ = nullptr;
+            return;
+        }
+
+        std::random_device seed;
+        std::mt19937 generator(seed());
+        std::uniform_int_distribution distribution(min, max);      
+        
+        for (size_t i = 0; i < count; i++) {
+            push_tail(distribution(generator));
+        }
+    }
+
+    LinkedList(size_t count, T min, T max) requires std::floating_point<T> {
+        if (min > max) std::swap(min, max);
+
+        if (count == 0) {
+            count_ = 0;
+            head_ = nullptr;
+            return;
+        }
+
+        std::random_device seed;
+        std::mt19937 generator(seed());
+        std::uniform_real_distribution distribution(min, max);
+
+        for (size_t i = 0; i < count; i++) {
+            push_tail(distribution(generator));
+        }
+    }
 
     LinkedList(const LinkedList<T>& other) { copy(other); }
 
@@ -82,7 +118,20 @@ public:
         }
     }
 
-    void push_tail(const LinkedList<T>& other);
+    void push_tail(const LinkedList<T>& other) {
+        if (other.head_ == nullptr) { return; }
+        if (head_ == nullptr) { copy(other); }
+
+        Node* current = head_;
+
+        do {
+            current = current->next;
+        } while (current->next != head_);
+
+        for (size_t i = 0; i < other.count_; i++) {
+            push_tail(other[i]);
+        }
+    }
 
     void push_head(T el) {
         if (head_ == nullptr) {
@@ -104,7 +153,19 @@ public:
         }
     }
 
-    void push_head(const LinkedList<T>& other);
+    void push_head(const LinkedList<T>& other) {
+        if (other.head_ == nullptr) { return; }
+        if (head_ == nullptr) { copy(other); }
+
+        LinkedList<T> temp(*this);
+        clear();
+        
+        for (size_t i = 0; i < other.count_; i++) {
+            push_tail(other[i]);
+        }
+
+        push_tail(temp);
+    }
 
     void pop_head() {
         if (!head_) { return; }
@@ -148,23 +209,18 @@ public:
         count_--;
     }
 
-    //TODO у меня есть метод contains
     void delete_node(T el) {
         if (head_) {
+            LinkedList<T> temp;
             Node* current = head_;
-
+            
             do {
-                if (current->next->data == el) {
-                    Node* to_delete = current->next;
-                    current->next = current->next->next;
-                    current = current->next;
-                    delete to_delete;
-                    count_--;
-                }
-                else {
-                    current = current->next;
-                }
+                if (current->data != el) { temp.push_tail(current->data); }
+                current = current->next;
             } while (current != head_);
+
+            clear();
+            copy(temp);
         }
     }
 
