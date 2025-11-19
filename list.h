@@ -217,6 +217,8 @@ public:
     }
 
     void delete_node(T el) {
+        if (!contains(el)) { return; }
+
         if (head_) {
             LinkedList<T> temp;
             Node* current = head_;
@@ -317,8 +319,12 @@ LinkedList<T> eratosthenes(T n) requires std::integral<T> {
     if (n < 2) { return LinkedList<T>(); }
 
     LinkedList<T> temp;
+    for (T num = 2; num <= n; num++) {
+        temp.push_tail(num);
+    }
 
-    for (T i = list; i < )
+    LinkedList<T> prime;
+    
 }
 
 #endif  
