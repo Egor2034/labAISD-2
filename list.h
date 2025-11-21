@@ -315,16 +315,24 @@ bool is_prime(T number) requires std::integral<T> {
 }
 
 template <typename T>
-LinkedList<T> eratosthenes(T n) requires std::integral<T> {
-    if (n < 2) { return LinkedList<T>(); }
+void eratosthenes(LinkedList<T>& list) requires std::integral<T> {
+    if (list.count() == 0) { return; }
 
-    LinkedList<T> temp;
-    for (T num = 2; num <= n; num++) {
-        temp.push_tail(num);
+    list.delete_node(1);
+
+    size_t count = list.count();
+    T max = list.max();
+
+    LinkedList<T> temp(list);
+    for (size_t i = 0; i < count; i++) {
+        if (temp.contains(list[i])) {
+            for (T mult = 2 * list[i]; mult <= max; mult += list[i]) {
+                temp.delete_node(mult);
+            }
+        }
     }
 
-    LinkedList<T> prime;
-    
+    list = temp;
 }
 
 #endif  
