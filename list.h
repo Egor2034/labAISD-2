@@ -22,8 +22,8 @@ public:
 
         std::random_device seed;
         std::mt19937 generator(seed());
-        std::uniform_int_distribution distribution(min, max);      
-        
+        std::uniform_int_distribution distribution(min, max);
+
         for (size_t i = 0; i < count; i++) {
             push_tail(distribution(generator));
         }
@@ -100,6 +100,22 @@ public:
         std::cout << "\n";
     }
 
+    void clear() {
+        if (head_) {
+            Node* current = head_->next;
+
+            while (current != head_) {
+                Node* to_delete = current;
+                current = current->next;
+                delete to_delete;
+            }
+
+            delete head_;
+            head_ = nullptr;
+            count_ = 0;
+        }
+    }
+
     void push_tail(T el) {
         if (head_ == nullptr) {
             head_ = new Node(nullptr, el);
@@ -118,22 +134,28 @@ public:
         }
     }
 
+    //оптимизировать
     void push_tail(const LinkedList<T>& other) {
         if (other.head_ == nullptr) { return; }
-        if (head_ == nullptr) { 
+        if (head_ == nullptr) {
             copy(other);
             return;
         }
 
-        Node* current = head_;
+        Node* tail = head_;
 
         do {
-            current = current->next;
-        } while (current->next != head_);
+            tail = tail->next;
+        } while (tail->next != head_);
 
-        for (size_t i = 0; i < other.count_; i++) {
-            push_tail(other[i]);
-        }
+        Node* other_current = other.head_;
+
+        do {
+            tail->next = new Node(head_, other_current->data);
+            tail = tail->next;
+            other_current = other_current->next;
+            count_++;
+        } while (other_current != other.head_);
     }
 
     void push_head(T el) {
@@ -156,21 +178,38 @@ public:
         }
     }
 
+    //оптимизировать
     void push_head(const LinkedList<T>& other) {
         if (other.head_ == nullptr) { return; }
-        if (head_ == nullptr) { 
-            copy(other); 
-            return; 
-        }
 
-        LinkedList<T> temp(*this);
-        clear();
+        if (head_ == nullptr) {
+            copy(other);
+            return;
+        }
         
-        for (size_t i = 0; i < other.count_; i++) {
-            push_tail(other[i]);
+        Node* tail = head_;
+
+        do {
+            tail = tail->next;
+        } while (tail->next != head_);
+
+        Node* new_head = new Node(nullptr, other.head_->data);
+        new_head->next = new_head;
+
+        Node* new_current = new_head;
+        Node* other_current = other.head_->next;
+
+        while (other_current != other.head_) {
+            new_current->next = new Node(new_head, other_current->data);
+            new_current = new_current->next;
+            other_current = other_current->next;
         }
 
-        push_tail(temp);
+        new_current->next = head_;
+        tail->next = new_head;
+        head_ = new_head;
+
+        count_ = count_ + other.count();
     }
 
     void pop_head() {
@@ -216,20 +255,31 @@ public:
         count_--;
     }
 
+    //оптимизировать
     void delete_node(T el) {
-        if (!contains(el)) { return; }
+        while (head_ && head_->data == el) {
+            pop_head();
+        }
 
-        if (head_) {
-            LinkedList<T> temp;
-            Node* current = head_;
-            
-            do {
-                if (current->data != el) { temp.push_tail(current->data); }
+        if (head_ == nullptr) { return; }
+
+        Node* before_current = head_;
+        Node* current = head_->next;
+      
+        while (current != head_) {
+            if (current->data == el) {
+                Node* to_delete = current;
+
                 current = current->next;
-            } while (current != head_);
+                before_current->next = current;
 
-            clear();
-            copy(temp);
+                delete to_delete;
+                count_--;
+            }
+            else {
+                before_current = current;
+                current = current->next;
+            }
         }
     }
 
@@ -250,7 +300,7 @@ public:
 
     T max() const {
         if (head_ == nullptr) {
-            throw std::exception("List is empty!");
+            throw std::runtime_error("List is empty!");
         }
 
         Node* current = head_;
@@ -263,23 +313,8 @@ public:
 
         return max;
     }
+
 private:
-    void clear() {
-        if (head_) {
-            Node* current = head_->next;
-
-            while (current != head_) {
-                Node* to_delete = current;
-                current = current->next;
-                delete to_delete;
-            }
-
-            delete head_;
-            head_ = nullptr;
-            count_ = 0;
-        }
-    }
-
     void copy(const LinkedList<T>& other) {
         Node* current = other.head_;
 
@@ -315,8 +350,22 @@ bool is_prime(T number) requires std::integral<T> {
 }
 
 template <typename T>
+bool is_increasing(LinkedList<T>& list) {
+    if (list.count() == 0) { return false; }
+
+    for (size_t i = 0; i < list.count() - 1; i++) {
+        if (list[i] >= list[i + 1]) { return false; }
+    }
+
+    return true;
+}
+
+template <typename T>
 void eratosthenes(LinkedList<T>& list) requires std::integral<T> {
     if (list.count() == 0) { return; }
+    if (!is_increasing(list)) {
+        throw std::runtime_error("List must be increasing!");
+    }
 
     list.delete_node(1);
 
@@ -325,10 +374,8 @@ void eratosthenes(LinkedList<T>& list) requires std::integral<T> {
 
     LinkedList<T> temp(list);
     for (size_t i = 0; i < count; i++) {
-        if (temp.contains(list[i])) {
-            for (T mult = 2 * list[i]; mult <= max; mult += list[i]) {
-                temp.delete_node(mult);
-            }
+        for (T mult = 2 * list[i]; mult <= max; mult += list[i]) {
+            temp.delete_node(mult);
         }
     }
 
